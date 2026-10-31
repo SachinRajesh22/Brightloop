@@ -13,10 +13,11 @@ let transport = null;
 function getTransport() {
   if (transport || !process.env.SMTP_HOST) return transport;
   const nodemailer = require('nodemailer');
+  const port = Number(process.env.SMTP_PORT) || 587;
   transport = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
+    port,
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : port === 465,
     auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
   });
   return transport;

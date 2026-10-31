@@ -9,6 +9,7 @@
 process.env.DB_FILE = ':memory:';
 process.env.JWT_SECRET = 'test-secret';
 process.env.NODE_ENV = 'test';
+process.env.SMTP_HOST = '';
 
 const bcrypt = require('bcryptjs');
 

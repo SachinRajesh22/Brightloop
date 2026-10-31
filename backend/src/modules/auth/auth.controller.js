@@ -33,8 +33,8 @@ function me(req, res) {
 async function forgotPassword(req, res) {
   const { resetUrl } = await service.forgotPassword(req.body);
   const body = { message: FORGOT_MESSAGE };
-  // Demo convenience: without SMTP the link is shown on screen (never in production).
-  if (process.env.NODE_ENV !== 'production' && resetUrl) body.devResetUrl = resetUrl;
+  // Demo convenience: only expose the link when mail is not configured.
+  if (!process.env.SMTP_HOST && process.env.NODE_ENV !== 'production' && resetUrl) body.devResetUrl = resetUrl;
   res.json(body);
 }
 
