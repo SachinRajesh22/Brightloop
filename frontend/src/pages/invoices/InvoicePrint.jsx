@@ -4,7 +4,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { api } from '../../api/client';
+import { useToast } from '../../components/ui';
 import { formatDate, formatMoney } from '../../utils/format';
+import { downloadInvoicePdf } from '../../utils/invoicePdf.js';
 
 const styles = `
 .invoice-print { max-width: 860px; margin: 24px auto; background: #fff; color: #1f2430; padding: 40px 48px;
@@ -46,6 +48,7 @@ const STAMP = { paid: '#16794c', cancelled: '#b42318', draft: '#6b7280', overdue
 export default function InvoicePrint() {
   const { id } = useParams();
   const location = useLocation();
+  const toast = useToast();
   const isPortal = location.pathname.startsWith('/portal/');
   const [inv, setInv] = useState(null);
   const [error, setError] = useState(null);
@@ -68,6 +71,13 @@ export default function InvoicePrint() {
   if (error) return <div className="alert alert-error" style={{ margin: 24 }}>{error.message}</div>;
   if (!inv) return <div className="page-loading">Loading invoice...</div>;
 
+  const downloadPdf = () => {
+    try {
+      downloadInvoicePdf(inv);
+    } catch (e) {
+      toast.error(e.message || 'Could not generate the invoice PDF.');
+    }
+  };
   const customer = inv.customer || { name: inv.customer_name };
   const lines = inv.lines || [];
   const breakdown = inv.tax_breakdown || [];
@@ -81,7 +91,8 @@ export default function InvoicePrint() {
       <style>{styles}</style>
       <div className="ip-toolbar no-print">
         <Link className="btn ghost" to={back}>Back</Link>
-        <button type="button" className="btn primary" onClick={() => window.print()}>Print / Save as PDF</button>
+        <button type="button" className="btn ghost" onClick={() => window.print()}>Print</button>
+        <button type="button" className="btn primary" onClick={downloadPdf}>Download PDF</button>
       </div>
       <article className="invoice-print">
         <header className="ip-head">

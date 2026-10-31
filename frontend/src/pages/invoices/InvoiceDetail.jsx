@@ -6,6 +6,7 @@ import {
   Card, ConfirmDialog, DataTable, ErrorBanner, PageHeader, Spinner, StatusBadge, StatCard, useToast,
 } from '../../components/ui';
 import { capitalize, formatDate, formatMoney } from '../../utils/format';
+import { downloadInvoicePdf } from '../../utils/invoicePdf.js';
 import RecordPaymentModal from '../../components/payments/RecordPaymentModal.jsx';
 
 const FLOW = ['draft', 'confirmed', 'paid'];
@@ -53,6 +54,13 @@ export default function InvoiceDetail() {
   const canPay = inv.status === 'confirmed' && inv.balance_due > 0;
   const canCancel = ['draft', 'confirmed'].includes(inv.status) && Number(inv.amount_paid) === 0;
   const flowIdx = FLOW.indexOf(inv.status);
+  const downloadPdf = () => {
+    try {
+      downloadInvoicePdf(inv);
+    } catch (e) {
+      toast.error(e.message || 'Could not generate the invoice PDF.');
+    }
+  };
 
   const lineColumns = [
     { key: 'description', label: 'Description', render: (l) => <><strong>{l.description}</strong>{l.product_name && l.product_name !== l.description && <div className="muted" style={{ fontSize: 12 }}>{l.product_name}</div>}</> },
@@ -81,6 +89,7 @@ export default function InvoiceDetail() {
         actions={(
           <>
             <Link className="btn ghost" to="/invoices">Back</Link>
+            <button type="button" className="btn ghost" onClick={downloadPdf}>Download PDF</button>
             <a className="btn ghost" href={`/invoices/${inv.id}/print`} target="_blank" rel="noreferrer">Print</a>
             {canCancel && <button type="button" className="btn danger" onClick={() => setPending('cancel')}>Cancel</button>}
             {['confirmed', 'paid'].includes(inv.status) && (

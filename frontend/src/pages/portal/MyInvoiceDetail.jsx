@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
-import { Card, DataTable, ErrorBanner, PageHeader, Spinner, StatusBadge } from '../../components/ui/index.jsx';
+import { Card, DataTable, ErrorBanner, PageHeader, Spinner, StatusBadge, useToast } from '../../components/ui/index.jsx';
 import { capitalize, formatDate, formatMoney } from '../../utils/format.js';
+import { downloadInvoicePdf } from '../../utils/invoicePdf.js';
 
 const METHOD = { bank_transfer: 'Bank transfer', upi: 'UPI', cash: 'Cash', card: 'Card', cheque: 'Cheque', other: 'Other' };
 
 export default function MyInvoiceDetail() {
   const { id } = useParams();
+  const toast = useToast();
   const [inv, setInv] = useState(null);
   const [error, setError] = useState(null);
 
@@ -25,6 +27,13 @@ export default function MyInvoiceDetail() {
   }
   if (!inv) return <Spinner />;
 
+  const downloadPdf = () => {
+    try {
+      downloadInvoicePdf(inv);
+    } catch (e) {
+      toast.error(e.message || 'Could not generate the invoice PDF.');
+    }
+  };
   const status = inv.is_overdue ? 'overdue' : inv.status;
   const lineColumns = [
     {
@@ -52,7 +61,12 @@ export default function MyInvoiceDetail() {
       <PageHeader
         title={`Invoice ${inv.number}`}
         subtitle={inv.subscription_number ? `For subscription ${inv.subscription_number}` : undefined}
-        actions={<Link className="btn ghost" to={`/portal/invoices/${inv.id}/print`} target="_blank">Print / Download</Link>}
+        actions={(
+          <>
+            <button type="button" className="btn ghost" onClick={downloadPdf}>Download PDF</button>
+            <Link className="btn ghost" to={`/portal/invoices/${inv.id}/print`} target="_blank">Print</Link>
+          </>
+        )}
       />
       {inv.is_overdue && (
         <div className="alert alert-error">
